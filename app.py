@@ -1,5 +1,5 @@
 from flask import Flask, request, jsonify
-import pdfplumber
+import fitz
 import requests
 import io
 
@@ -14,22 +14,13 @@ def extract():
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
         }
         response = requests.get(pdf_url, timeout=30, headers=headers)
-        content_type = response.headers.get('Content-Type', '')
-        content_length = len(response.content)
-        
         pdf_file = io.BytesIO(response.content)
         text = ''
-        with pdfplumber.open(pdf_file) as pdf:
-            for page in pdf.pages:
-                page_text = page.extract_text()
-                if page_text:
-                    text += page_text + '\n'
-        return jsonify({
-            'text': text,
-            'error': False,
-            'debug_content_type': content_type,
-            'debug_content_length': content_length
-        })
+        doc = fitz.open(stream=pdf_file, filetype='pdf')
+        for page in doc:
+            text += page.get_text() + '\n'
+        doc.close()
+        return jsonify({'text': text, 'error': False})
     except Exception as e:
         return jsonify({'text': '', 'error': True, 'message': str(e)})
 
