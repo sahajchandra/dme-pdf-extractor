@@ -1,7 +1,5 @@
 from flask import Flask, request, jsonify
-import fitz
 import requests
-import io
 
 app = Flask(__name__)
 
@@ -10,17 +8,32 @@ def extract():
     try:
         data = request.json
         pdf_url = data.get('pdf_url')
-        headers = {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
-        }
-        response = requests.get(pdf_url, timeout=30, headers=headers)
-        pdf_file = io.BytesIO(response.content)
-        text = ''
-        doc = fitz.open(stream=pdf_file, filetype='pdf')
-        for page in doc:
-            text += page.get_text() + '\n'
-        doc.close()
+        api_key = data.get('ocr_api_key')
+
+        response = requests.post(
+            'https://api.ocr.space/parse/url',
+            data={
+                'url': pdf_url,
+                'apikey': api_key,
+                'language': 'eng',
+                'isTable': 'true',
+                'OCREngine': '2'
+            },
+            timeout=60
+        )
+
+        result = response.json()
+
+        if result.get('IsErroredOnProcessing'):
+            raise Exception(str(result.get('ErrorMessage')))
+
+        text = '\n'.join(
+            page.get('ParsedText', '')
+            for page in result.get('ParsedResults', [])
+        )
+
         return jsonify({'text': text, 'error': False})
+
     except Exception as e:
         return jsonify({'text': '', 'error': True, 'message': str(e)})
 
