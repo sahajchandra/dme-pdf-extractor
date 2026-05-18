@@ -10,7 +10,10 @@ def extract():
     try:
         data = request.json
         pdf_url = data.get('pdf_url')
-        response = requests.get(pdf_url, timeout=30)
+        headers = {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+        }
+        response = requests.get(pdf_url, timeout=30, headers=headers)
         pdf_file = io.BytesIO(response.content)
         text = ''
         with pdfplumber.open(pdf_file) as pdf:
