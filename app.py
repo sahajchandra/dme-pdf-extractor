@@ -11,7 +11,7 @@ def extract():
         api_key = data.get('ocr_api_key')
 
         response = requests.post(
-            'https://api.ocr.space/parse/url',
+            'https://api2.ocr.space/parse/url',
             data={
                 'url': pdf_url,
                 'apikey': api_key,
