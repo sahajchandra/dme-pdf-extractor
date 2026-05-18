@@ -1,13 +1,18 @@
 from flask import Flask, request, jsonify
 import requests
-import pytesseract
-from pdf2image import convert_from_bytes
 
 app = Flask(__name__)
+
+@app.route('/health', methods=['GET'])
+def health():
+    return 'OK', 200
 
 @app.route('/extract', methods=['POST'])
 def extract():
     try:
+        import pytesseract
+        from pdf2image import convert_from_bytes
+
         data = request.json
         pdf_url = data.get('pdf_url')
         headers = {'User-Agent': 'Mozilla/5.0'}
