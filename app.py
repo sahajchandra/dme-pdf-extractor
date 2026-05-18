@@ -22,17 +22,11 @@ def extract():
             timeout=60
         )
 
-        result = response.json()
-
-        if result.get('IsErroredOnProcessing'):
-            raise Exception(str(result.get('ErrorMessage')))
-
-        text = '\n'.join(
-            page.get('ParsedText', '')
-            for page in result.get('ParsedResults', [])
-        )
-
-        return jsonify({'text': text, 'error': False})
+        return jsonify({
+            'debug_status': response.status_code,
+            'debug_response': response.text[:500],
+            'error': False
+        })
 
     except Exception as e:
         return jsonify({'text': '', 'error': True, 'message': str(e)})
