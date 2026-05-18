@@ -19,9 +19,10 @@ def extract():
         response = requests.get(pdf_url, timeout=30, headers=headers)
         images = convert_from_bytes(
             response.content,
-            dpi=150,
+            dpi=72,
             first_page=1,
-            last_page=2
+            last_page=2,
+            grayscale=True
         )
         text = ''
         for image in images:
