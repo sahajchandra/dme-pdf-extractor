@@ -1,4 +1,4 @@
 flask
-pymupdf
+PyMuPDF
 requests
 gunicorn
