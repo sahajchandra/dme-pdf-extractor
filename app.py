@@ -1,5 +1,7 @@
 from flask import Flask, request, jsonify
 import requests
+import pytesseract
+from pdf2image import convert_from_bytes
 
 app = Flask(__name__)
 
@@ -8,26 +10,13 @@ def extract():
     try:
         data = request.json
         pdf_url = data.get('pdf_url')
-        api_key = data.get('ocr_api_key')
-
-        response = requests.get(
-            'https://api.ocr.space/parse/url',
-            params={
-                'url': pdf_url,
-                'apikey': api_key,
-                'language': 'eng',
-                'OCREngine': '2',
-                'isTable': 'true'
-            },
-            timeout=60
-        )
-
-        return jsonify({
-            'debug_status': response.status_code,
-            'debug_raw': response.text[:1000],
-            'error': False
-        })
-
+        headers = {'User-Agent': 'Mozilla/5.0'}
+        response = requests.get(pdf_url, timeout=30, headers=headers)
+        images = convert_from_bytes(response.content)
+        text = ''
+        for image in images:
+            text += pytesseract.image_to_string(image) + '\n'
+        return jsonify({'text': text, 'error': False})
     except Exception as e:
         return jsonify({'text': '', 'error': True, 'message': str(e)})
 
