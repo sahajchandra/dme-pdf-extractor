@@ -10,23 +10,29 @@ def extract():
         pdf_url = data.get('pdf_url')
         api_key = data.get('ocr_api_key')
 
-        response = requests.post(
-            'https://api2.ocr.space/parse/url',
-            data={
+        response = requests.get(
+            'https://api.ocr.space/parse/url',
+            params={
                 'url': pdf_url,
                 'apikey': api_key,
                 'language': 'eng',
-                'isTable': 'true',
-                'OCREngine': '2'
+                'OCREngine': '2',
+                'isTable': 'true'
             },
             timeout=60
         )
 
-        return jsonify({
-            'debug_status': response.status_code,
-            'debug_response': response.text[:500],
-            'error': False
-        })
+        result = response.json()
+
+        if result.get('IsErroredOnProcessing'):
+            raise Exception(str(result.get('ErrorMessage')))
+
+        text = '\n'.join(
+            page.get('ParsedText', '')
+            for page in result.get('ParsedResults', [])
+        )
+
+        return jsonify({'text': text, 'error': False})
 
     except Exception as e:
         return jsonify({'text': '', 'error': True, 'message': str(e)})
